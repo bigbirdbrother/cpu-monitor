@@ -1,49 +1,39 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CPU State Monitor</title>
+    <!-- Tailwind CSS & DaisyUI CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .chart-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            padding: 20px;
-        }
-        .chart-container {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        #refreshBtn {
-            margin: 20px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        #chartTypeSelect {
-            margin: 20px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-        }
+        /* Add custom styles if needed */
     </style>
 </head>
-<body>
-<button id="refreshBtn" onclick="loadData()">Refresh Charts</button>
-<select id="chartTypeSelect" onchange="updateChartType()">
-    <option value="pie">Pie Chart</option>
-    <option value="bar">Bar Chart</option>
-</select>
-<div class="chart-grid" id="chartsContainer"></div>
+<body class="bg-gray-100 font-sans">
+<div class="container mx-auto px-6 py-10">
+    <h1 class="text-3xl font-semibold text-center mb-8 text-gray-800">CPU State Monitor</h1>
+    <div class="flex justify-between mb-6">
+        <button id="refreshBtn" onclick="loadData()" class="btn btn-primary text-white px-6 py-2 rounded-lg shadow-md hover:bg-blue-600 transition duration-300">
+            Refresh Charts
+        </button>
+        <div>
+            <label for="chartTypeSelect" class="text-lg font-medium text-gray-700 mr-2">Chart Type:</label>
+            <select id="chartTypeSelect" onchange="updateChartType()" class="select select-bordered w-40">
+                <option value="pie">Pie Chart</option>
+                <option value="bar">Bar Chart</option>
+            </select>
+        </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="chartsContainer"></div>
+</div>
 
-<script th:inline="javascript">
+<script>
     let charts = new Map();
     let currentChartType = 'pie';  // Default chart type is pie
     let currentLanguage = 'en';  // Default language is English
 
-    // Text dictionary for multiple languages
     const translations = {
         en: {
             refreshBtn: "Refresh Charts",
@@ -59,42 +49,62 @@
         }
     };
 
-    // Function to apply translations based on the selected language
     function applyTranslations() {
         document.getElementById('refreshBtn').textContent = translations[currentLanguage].refreshBtn;
         document.getElementById('chartTypeSelect').options[0].textContent = translations[currentLanguage].pie;
         document.getElementById('chartTypeSelect').options[1].textContent = translations[currentLanguage].bar;
-        document.getElementById('chartTypeSelect').previousElementSibling.textContent = translations[currentLanguage].chartType;
     }
 
-    // Function to calculate color gradient from red to green based on the index
     function getColorForIndex(index) {
-        const red = Math.max(255 - index * 28, 0);  // Red decreases as index increases
-        const green = Math.min(index * 28, 255);   // Green increases as index increases
-        return `rgb(${red}, ${green}, 0)`;  // RGB format
+        const red = Math.max(255 - index * 28, 0);
+        const green = Math.min(index * 28, 255);
+        return `rgb(${red}, ${green}, 0)`;
     }
 
     function createChart(cpuId, data) {
         const container = document.createElement('div');
-        container.className = 'chart-container';
+        container.className = 'card bg-white shadow-lg p-4 rounded-lg';
+
+        const chartTitle = document.createElement('h3');
+        chartTitle.className = 'text-xl font-semibold mb-2 text-gray-700';
+        chartTitle.textContent = `CPU ${cpuId} Usage`;
+        container.appendChild(chartTitle);
+
         const canvas = document.createElement('canvas');
         container.appendChild(canvas);
         document.getElementById('chartsContainer').appendChild(container);
 
         const ctx = canvas.getContext('2d');
         return new Chart(ctx, {
-            type: currentChartType,  // Use the current chart type
+            type: currentChartType,
             data: {
                 labels: Array.from({length: 9}, (_, i) => `S${i}`),
                 datasets: [{
                     label: `CPU ${cpuId} Usage`,
                     data: data,
-                    backgroundColor: data.map((_, index) => getColorForIndex(index)),  // Color based on index
-                    hoverBackgroundColor: data.map((_, index) => getColorForIndex(index))  // Same hover color
+                    backgroundColor: data.map((_, index) => getColorForIndex(index)),
+                    hoverBackgroundColor: data.map((_, index) => getColorForIndex(index))
                 }]
             },
             options: {
                 responsive: true,
+                rotation: currentChartType === 'pie' ? Math.PI / 4 : 0,
+                cutout: currentChartType === 'pie' ? '40%' : 0,
+                borderWidth: 4,
+                borderColor: 'rgba(255, 255, 255, 0.7)', // Lighter border for depth effect
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: 'rgb(75, 75, 75)'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        titleColor: 'white',
+                        bodyColor: 'white'
+                    }
+                },
                 scales: currentChartType === 'bar' ? {
                     y: { beginAtZero: true }
                 } : {}
@@ -117,25 +127,18 @@
     }
 
     function updateChartType() {
-        // Update the chart type based on the selected value
         currentChartType = document.getElementById('chartTypeSelect').value;
-        loadData();  // Reload data with the new chart type
+        loadData();
     }
 
-    // Function to detect the browser language
     function detectLanguage() {
-        const language = navigator.language || navigator.userLanguage;  // Get the browser's language
-        if (language.startsWith('zh')) {
-            return 'zh';  // If language is Chinese (zh), use Chinese
-        } else {
-            return 'en';  // Default to English
-        }
+        const language = navigator.language || navigator.userLanguage;
+        return language.startsWith('zh') ? 'zh' : 'en';
     }
 
-    // Initialize the page
-    currentLanguage = detectLanguage();  // Automatically detect the language
-    applyTranslations();  // Apply the translations for the detected language
-    loadData();  // Initial data load
+    currentLanguage = detectLanguage();
+    applyTranslations();
+    loadData();
 </script>
 </body>
 </html>
