@@ -1,12 +1,19 @@
+# 构建阶段
 FROM eclipse-temurin:17-jdk-jammy as builder
 WORKDIR /app
-RUN ./mvnw clean package
+# 复制项目文件到容器
+COPY . .
+# 调试：列出 /app 目录中的文件，确认 mvnw 是否在其中
+RUN ls -alh /app
+# 确保 ./mvnw 可执行并执行构建
+RUN chmod +x ./mvnw && ./mvnw clean package
 
+# 运行阶段
 FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 COPY --from=builder /app/target/*.jar /app/app.jar
 
-# 设置默认值
+# 设置默认环境变量
 ENV SSH_HOST=192.168.50.61
 ENV SSH_PORT=22
 ENV SSH_USERNAME=root
