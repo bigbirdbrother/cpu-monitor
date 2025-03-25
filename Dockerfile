@@ -5,8 +5,8 @@ WORKDIR /app
 COPY . .
 # 调试：列出 /app 目录中的文件，确认 mvnw 是否在其中
 RUN ls -alh /app
-# 确保 ./mvnw 可执行并执行构建
-RUN chmod +x ./mvnw && ./mvnw clean package
+# 如果 mvnw 文件存在且权限无问题，添加执行权限并执行构建
+RUN chmod +x /app/mvnw && /app/mvnw clean package
 
 # 运行阶段
 FROM eclipse-temurin:17-jre-jammy
