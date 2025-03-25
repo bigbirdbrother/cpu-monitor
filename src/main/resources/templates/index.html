@@ -22,14 +22,33 @@
             font-size: 16px;
             cursor: pointer;
         }
+        #chartTypeSelect {
+            margin: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 <button id="refreshBtn" onclick="loadData()">Refresh Charts</button>
+<select id="chartTypeSelect" onchange="updateChartType()">
+    <option value="pie">Pie Chart</option>
+    <option value="bar">Bar Chart</option>
+</select>
 <div class="chart-grid" id="chartsContainer"></div>
 
 <script th:inline="javascript">
     let charts = new Map();
+    let currentChartType = 'pie';  // Default chart type is pie
+
+    // Function to calculate color gradient from red to green based on the index
+    function getColorForIndex(index) {
+        // Create a color gradient from red to green
+        const red = Math.max(255 - index * 28, 0);  // Red decreases as index increases
+        const green = Math.min(index * 28, 255);   // Green increases as index increases
+        return `rgb(${red}, ${green}, 0)`;  // RGB format
+    }
 
     function createChart(cpuId, data) {
         const container = document.createElement('div');
@@ -40,20 +59,21 @@
 
         const ctx = canvas.getContext('2d');
         return new Chart(ctx, {
-            type: 'bar',
+            type: currentChartType,  // Use the current chart type
             data: {
                 labels: Array.from({length: 9}, (_, i) => `S${i}`),
                 datasets: [{
                     label: `CPU ${cpuId} Usage`,
                     data: data,
-                    backgroundColor: '#4CAF50'
+                    backgroundColor: data.map((_, index) => getColorForIndex(index)),  // Color based on index
+                    hoverBackgroundColor: data.map((_, index) => getColorForIndex(index))  // Same hover color
                 }]
             },
             options: {
                 responsive: true,
-                scales: {
+                scales: currentChartType === 'bar' ? {
                     y: { beginAtZero: true }
-                }
+                } : {}
             }
         });
     }
@@ -64,12 +84,18 @@
             .then(data => {
                 charts.forEach((chart, cpu) => chart.destroy());
                 charts.clear();
-                document.getElementById('chartsContainer').innerHTML="";
+                document.getElementById('chartsContainer').innerHTML = "";
                 for (let cpu = 0; cpu < 6; cpu++) {
                     const cpuData = data[`cpu${cpu}`];
                     charts.set(cpu, createChart(cpu, cpuData));
                 }
             });
+    }
+
+    function updateChartType() {
+        // Update the chart type based on the selected value
+        currentChartType = document.getElementById('chartTypeSelect').value;
+        loadData();  // Reload data with the new chart type
     }
 
     // Initial load
