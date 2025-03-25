@@ -1,6 +1,6 @@
 FROM eclipse-temurin:17-jdk-jammy as builder
 WORKDIR /app
-COPY . .
+COPY src/main/docker .
 RUN ./mvnw clean package
 
 FROM eclipse-temurin:17-jre-jammy
