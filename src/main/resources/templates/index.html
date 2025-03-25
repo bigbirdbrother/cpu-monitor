@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>CPU State Monitor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            padding: 20px;
+        }
+        .chart-container {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #refreshBtn {
+            margin: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<button id="refreshBtn" onclick="loadData()">Refresh Charts</button>
+<div class="chart-grid" id="chartsContainer"></div>
+
+<script th:inline="javascript">
+    let charts = new Map();
+
+    function createChart(cpuId, data) {
+        const container = document.createElement('div');
+        container.className = 'chart-container';
+        const canvas = document.createElement('canvas');
+        container.appendChild(canvas);
+        document.getElementById('chartsContainer').appendChild(container);
+
+        const ctx = canvas.getContext('2d');
+        return new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: Array.from({length: 9}, (_, i) => `S${i}`),
+                datasets: [{
+                    label: `CPU ${cpuId} Usage`,
+                    data: data,
+                    backgroundColor: '#4CAF50'
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    function loadData() {
+        fetch('/api/stats')
+            .then(response => response.json())
+            .then(data => {
+                charts.forEach((chart, cpu) => chart.destroy());
+                charts.clear();
+                document.getElementById('chartsContainer').innerHTML="";
+                for (let cpu = 0; cpu < 6; cpu++) {
+                    const cpuData = data[`cpu${cpu}`];
+                    charts.set(cpu, createChart(cpu, cpuData));
+                }
+            });
+    }
+
+    // Initial load
+    loadData();
+</script>
+</body>
+</html>
