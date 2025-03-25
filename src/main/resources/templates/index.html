@@ -41,10 +41,34 @@
 <script th:inline="javascript">
     let charts = new Map();
     let currentChartType = 'pie';  // Default chart type is pie
+    let currentLanguage = 'en';  // Default language is English
+
+    // Text dictionary for multiple languages
+    const translations = {
+        en: {
+            refreshBtn: "Refresh Charts",
+            chartType: "Chart Type",
+            pie: "Pie Chart",
+            bar: "Bar Chart",
+        },
+        zh: {
+            refreshBtn: "刷新图表",
+            chartType: "图表类型",
+            pie: "饼图",
+            bar: "柱状图",
+        }
+    };
+
+    // Function to apply translations based on the selected language
+    function applyTranslations() {
+        document.getElementById('refreshBtn').textContent = translations[currentLanguage].refreshBtn;
+        document.getElementById('chartTypeSelect').options[0].textContent = translations[currentLanguage].pie;
+        document.getElementById('chartTypeSelect').options[1].textContent = translations[currentLanguage].bar;
+        document.getElementById('chartTypeSelect').previousElementSibling.textContent = translations[currentLanguage].chartType;
+    }
 
     // Function to calculate color gradient from red to green based on the index
     function getColorForIndex(index) {
-        // Create a color gradient from red to green
         const red = Math.max(255 - index * 28, 0);  // Red decreases as index increases
         const green = Math.min(index * 28, 255);   // Green increases as index increases
         return `rgb(${red}, ${green}, 0)`;  // RGB format
@@ -98,8 +122,20 @@
         loadData();  // Reload data with the new chart type
     }
 
-    // Initial load
-    loadData();
+    // Function to detect the browser language
+    function detectLanguage() {
+        const language = navigator.language || navigator.userLanguage;  // Get the browser's language
+        if (language.startsWith('zh')) {
+            return 'zh';  // If language is Chinese (zh), use Chinese
+        } else {
+            return 'en';  // Default to English
+        }
+    }
+
+    // Initialize the page
+    currentLanguage = detectLanguage();  // Automatically detect the language
+    applyTranslations();  // Apply the translations for the detected language
+    loadData();  // Initial data load
 </script>
 </body>
 </html>
