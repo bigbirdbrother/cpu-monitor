@@ -4,18 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CPU State Monitor</title>
-    <!-- Tailwind CSS & DaisyUI CDN -->
+    <!-- 引入思源黑体字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Source+Han+Sans&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* Add custom styles if needed */
+        /* 设置中文字体为思源黑体 */
+        body {
+            font-family: 'Source Han Sans', sans-serif;
+        }
+
+        /* 自定义中文字体的样式 */
+        .text-xl, .text-lg, .font-semibold, .font-medium {
+            font-family: 'Source Han Sans', sans-serif;
+        }
+
+        /* 其余的样式保持不变 */
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
 <div class="container mx-auto px-6 py-10">
     <h1 class="text-3xl font-semibold text-center mb-8 text-gray-800">CPU State Monitor</h1>
     <div class="flex justify-between mb-6">
-        <button id="refreshBtn" onclick="loadData()" class="btn btn-primary text-white px-6 py-2 rounded-lg shadow-md hover:bg-blue-600 transition duration-300">
+        <button id="refreshBtn" onclick="loadData()" class="bg-blue-500 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-blue-600 active:bg-blue-700 transition duration-300">
             Refresh Charts
         </button>
         <div>
@@ -78,7 +89,7 @@
         return new Chart(ctx, {
             type: currentChartType,
             data: {
-                labels: Array.from({length: 9}, (_, i) => `S${i}`),
+                labels: Array.from({length: 9}, (_, i) => `C${i}`),  // Updated to C-states (C0 to C8)
                 datasets: [{
                     label: `CPU ${cpuId} Usage`,
                     data: data,
